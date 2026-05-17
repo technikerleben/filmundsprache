@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Film & Sprache – Projektnavi</title>
+  <style>
+    :root {
+      --col-slate-dark:  #2C3D4C;
+      --col-slate:       #3E5668;
+      --col-slate-mid:   #6A8599;
+      --col-slate-pale:  #D0DCE6;
+      --col-slate-ghost: #EEF3F7;
+      --col-rust-dark:   #9E4E22;
+      --col-rust:        #D97A4A;
+      --col-rust-mid:    #EBA882;
+      --col-rust-pale:   #F5DDD1;
+      --col-rust-ghost:  #FBF0EB;
+      --col-sage-dark:   #4D8B3F;
+      --col-sage:        #7DBB6F;
+      --col-sage-mid:    #A8D49D;
+      --col-sage-pale:   #DDF0D8;
+      --col-sage-ghost:  #F0FAF0;
+      --col-warning:      #C17B00;
+      --col-warning-pale: #FFF3CC;
+      --col-warning-text: #5C4400;
+      --col-error:        #C0392B;
+      --col-error-pale:   #FDECEA;
+      --col-error-text:   #7A1B14;
+      --col-bg:           #F5F4F1;
+      --col-white:        #FFFFFF;
+      --col-text:         #1E2A35;
+      --col-text-muted:   #5A6A78;
+      --col-border:       #D4D0C8;
+      --col-shadow:       rgba(62,86,104,0.12);
+      --col-focus:        #3E5668;
+      --text-xs:   0.694rem;
+      --text-sm:   0.833rem;
+      --text-base: 1rem;
+      --text-md:   1.2rem;
+      --text-lg:   1.44rem;
+      --text-xl:   1.728rem;
+      --text-2xl:  2.074rem;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--col-bg);
+      color: var(--col-text);
+      font-size: var(--text-base);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--col-focus);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    /* ======= VIEWS ======= */
+    .view { display: none; }
+    .view.active { display: block; }
+    #view-cockpit.active { display: flex; flex-direction: column; min-height: calc(100vh - 88px); }
+
+    /* ======= HEADER ======= */
+    .app-header {
+      background: var(--col-slate);
+      color: white;
+      padding: 11px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .app-header h1 { font-size: var(--text-md); font-weight: 700; line-height: 1.2; }
+    .app-header .sub { font-size: var(--text-xs); color: var(--col-slate-pale); margin-top: 1px; }
+    .header-project-badge {
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      display: none;
+    }
+
+    /* ======= PHASE PROGRESS STRIP ======= */
+    .phase-strip {
+      background: var(--col-slate-dark);
+      display: none;
+      padding: 0 16px;
+      overflow-x: auto;
+    }
+    .phase-strip.visible { display: flex; }
+    .phase-step {
+      flex: 1;
+      min-width: 90px;
+      text-align: center;
+      padding: 8px 6px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .phase-step:hover { color: rgba(255,255,255,0.75); }
+    .phase-step.active { color: white; font-weight: 700; border-bottom-color: var(--col-rust); }
+    .phase-step.done { color: var(--col-sage-pale); }
+    .phase-step.done::before { content: '✓ '; }
+
+    /* ======= START VIEW ======= */
+    #view-start { max-width: 860px; margin: 0 auto; padding: 48px 24px 64px; }
+    .start-hero { text-align: center; margin-bottom: 52px; }
+    .start-hero h2 { font-size: var(--text-2xl); color: var(--col-slate); margin-bottom: 10px; }
+    .start-hero .lead {
+      font-size: var(--text-md); color: var(--col-text-muted);
+      max-width: 580px; margin: 0 auto 28px;
+    }
+    .journey-pills {
+      display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;
+    }
+    .journey-pill {
+      background: var(--col-slate-pale); color: var(--col-slate-dark);
+      border-radius: 20px; padding: 5px 13px;
+      font-size: var(--text-xs); font-weight: 600;
+    }
+    .journey-pill.arrow::after { content: ' →'; }
+
+    .area-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .area-card {
+      background: var(--col-white);
+      border-radius: 16px;
+      padding: 36px 28px;
+      border: 2px solid var(--col-border);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .area-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px var(--col-shadow); }
+    .area-card.film  { border-top: 5px solid var(--col-rust); }
+    .area-card.sprache { border-top: 5px solid var(--col-sage); }
+    .area-icon { font-size: 2.8rem; margin-bottom: 14px; }
+    .area-card h3 { font-size: var(--text-lg); color: var(--col-slate-dark); margin-bottom: 8px; }
+    .area-card p  { color: var(--col-text-muted); font-size: var(--text-sm); margin-bottom: 22px; line-height: 1.7; }
+
+    /* ======= PROJECTS VIEW ======= */
+    #view-projects { max-width: 920px; margin: 0 auto; padding: 28px 24px 56px; }
+    .view-header {
+      display: flex; align-items: center; gap: 16px; margin-bottom: 28px;
+    }
+    .view-header h2 { font-size: var(--text-lg); color: var(--col-slate-dark); }
+    .projects-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+    .project-card {
+      background: var(--col-white); border-radius: 14px; padding: 24px;
+      border: 2px solid var(--col-border);
+      display: flex; flex-direction: column; gap: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .project-card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px var(--col-shadow); }
+    .project-card.film   { border-left: 5px solid var(--col-rust); }
+    .project-card.sprache { border-left: 5px solid var(--col-sage); }
+    .project-card-top { display: flex; align-items: flex-start; gap: 10px; }
+    .proj-num {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800;
+    }
+    .proj-num.film   { background: var(--col-rust-pale);   color: var(--col-rust-dark); }
+    .proj-num.sprache { background: var(--col-sage-pale); color: var(--col-sage-dark); }
+    .project-card h4 { font-size: var(--text-base); font-weight: 700; color: var(--col-slate-dark); }
+    .project-card p  { font-size: var(--text-sm); color: var(--col-text-muted); flex: 1; line-height: 1.6; }
+    .proj-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .proj-tag {
+      background: var(--col-bg); border: 1px solid var(--col-border);
+      border-radius: 12px; padding: 2px 9px; font-size: 11px; color: var(--col-text-muted);
+    }
+
+    /* ======= COCKPIT ======= */
+    .cockpit-grid {
+      display: grid;
+      grid-template-columns: 196px 1fr 264px;
+      flex: 1;
+    }
+
+    /* Left Nav */
+    .cockpit-nav {
+      background: var(--col-slate-dark);
+      padding: 16px 0;
+      overflow-y: auto;
+    }
+    .nav-project-box {
+      padding: 0 14px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 6px;
+    }
+    .nav-project-label { font-size: 10px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+    .nav-project-name  { font-size: var(--text-sm); color: white; font-weight: 700; line-height: 1.3; }
+
+    .nav-btn {
+      width: 100%; text-align: left; background: none; border: none;
+      padding: 9px 14px; cursor: pointer;
+      font-size: var(--text-xs); color: rgba(255,255,255,0.48);
+      display: flex; align-items: flex-start; gap: 9px;
+      transition: all 0.15s; font-family: inherit; line-height: 1.4;
+      border-left: 3px solid transparent;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8); }
+    .nav-btn.active { background: rgba(255,255,255,0.1); color: white; font-weight: 600; border-left-color: var(--col-rust); }
+    .nav-btn.done   { color: var(--col-sage-pale); }
+    .nav-num {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; margin-top: 1px;
+      background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6);
+    }
+    .nav-btn.active .nav-num { background: white; color: var(--col-slate-dark); }
+    .nav-btn.done   .nav-num { background: var(--col-sage-dark); color: white; }
+    .nav-divider { border-top: 1px solid rgba(255,255,255,0.08); margin: 10px 0; }
+
+    /* Center Main */
+    .cockpit-main {
+      padding: 24px 28px;
+      overflow-y: auto;
+      max-height: calc(100vh - 88px);
+    }
+
+    .phase-header { margin-bottom: 22px; padding-bottom: 16px; border-bottom: 2px solid var(--col-border); }
+    .phase-label  { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--col-text-muted); margin-bottom: 4px; }
+    .phase-h2     { font-size: var(--text-xl); color: var(--col-slate); margin-bottom: 4px; }
+    .phase-goal   { font-size: var(--text-sm); color: var(--col-text-muted); }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: var(--text-sm); font-weight: 600; color: var(--col-text); margin-bottom: 6px; }
+    .form-group textarea,
+    .form-group input[type="text"],
+    .form-group select {
+      width: 100%; border: 2px solid var(--col-border); border-radius: 8px;
+      padding: 9px 13px; font-size: 1rem; font-family: inherit;
+      color: var(--col-text); background: var(--col-white);
+      resize: vertical; min-height: 44px; transition: border-color 0.2s;
+    }
+    .form-group textarea { min-height: 76px; }
+    .form-group textarea:focus,
+    .form-group input:focus,
+    .form-group select:focus { border-color: var(--col-slate); outline: none; box-shadow: 0 0 0 3px var(--col-slate-pale); }
+
+    /* Checkbox chips */
+    .chip-group { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+    .chip {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--col-white); border: 2px solid var(--col-border);
+      border-radius: 20px; padding: 5px 12px; cursor: pointer;
+      font-size: var(--text-sm); transition: all 0.15s; user-select: none;
+    }
+    .chip input { width: 15px; height: 15px; cursor: pointer; }
+    .chip:has(input:checked) { border-color: var(--col-slate); background: var(--col-slate-ghost); font-weight: 600; }
+
+    /* Analysis cards */
+    .cards-wrap { display: flex; flex-direction: column; gap: 16px; margin-bottom: 14px; }
+    .acard {
+      background: var(--col-white); border: 2px solid var(--col-border);
+      border-radius: 12px; padding: 20px; position: relative;
+    }
+    .acard-head {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+    }
+    .acard-title { font-size: var(--text-sm); font-weight: 700; color: var(--col-slate); }
+    .btn-rm {
+      background: none; border: none; cursor: pointer; color: var(--col-text-muted);
+      font-size: 20px; width: 32px; height: 32px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .btn-rm:hover { background: var(--col-error-pale); color: var(--col-error); }
+
+    /* Checklist */
+    .checklist { display: flex; flex-direction: column; gap: 8px; }
+    .check-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 10px 14px; background: var(--col-white);
+      border: 2px solid var(--col-border); border-radius: 9px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .check-item:has(input:checked) { border-color: var(--col-sage-dark); background: var(--col-sage-pale); }
+    .check-item input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; flex-shrink: 0; margin-top: 1px; }
+    .check-item span { font-size: var(--text-sm); }
+
+    /* Product structure */
+    .prod-struct {
+      background: var(--col-slate-ghost); border-radius: 10px;
+      padding: 16px; margin: 12px 0;
+    }
+    .prod-struct h5 { font-size: var(--text-sm); font-weight: 700; color: var(--col-slate); margin-bottom: 10px; }
+    .struct-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 0; font-size: var(--text-sm);
+      border-bottom: 1px solid var(--col-border);
+    }
+    .struct-row:last-child { border: none; }
+    .struct-num {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--col-slate); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+
+    /* Editable table */
+    .edit-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+    .edit-table th {
+      background: var(--col-slate); color: white;
+      padding: 8px 10px; font-size: var(--text-xs); text-align: left; font-weight: 700;
+    }
+    .edit-table td { border: 1px solid var(--col-border); padding: 2px; }
+    .edit-table input {
+      width: 100%; border: none; padding: 7px 9px;
+      font-size: var(--text-sm); font-family: inherit;
+      background: transparent; color: var(--col-text);
+    }
+    .edit-table input:focus { background: var(--col-slate-ghost); outline: none; }
+    .edit-table tr:nth-child(even) td { background: var(--col-bg); }
+    .edit-table tr:nth-child(even) td input { background: transparent; }
+
+    /* Buttons */
+    .btn {
+      border: none; border-radius: 8px; padding: 10px 22px;
+      font-size: var(--text-base); font-weight: 600; cursor: pointer;
+      font-family: inherit; min-height: 44px; transition: all 0.18s;
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .btn-slate  { background: var(--col-slate); color: white; }
+    .btn-slate:hover  { background: var(--col-slate-dark); transform: translateY(-1px); }
+    .btn-rust   { background: var(--col-rust-dark); color: white; }
+    .btn-rust:hover   { background: #7d3d1a; transform: translateY(-1px); }
+    .btn-sage   { background: var(--col-sage-dark); color: white; }
+    .btn-sage:hover   { background: #3d7033; transform: translateY(-1px); }
+    .btn-ghost  { background: var(--col-white); color: var(--col-slate); border: 2px solid var(--col-slate); }
+    .btn-ghost:hover  { background: var(--col-slate-ghost); }
+    .btn-add {
+      width: 100%; background: var(--col-slate-ghost); color: var(--col-slate);
+      border: 2px dashed var(--col-slate-mid); border-radius: 8px;
+      padding: 9px 18px; font-size: var(--text-sm); font-weight: 600;
+      cursor: pointer; font-family: inherit; min-height: 44px; transition: all 0.15s;
+    }
+    .btn-add:hover { background: var(--col-slate-pale); border-style: solid; }
+    .btn-back {
+      background: none; border: 2px solid var(--col-border); border-radius: 8px;
+      padding: 8px 16px; cursor: pointer; font-size: var(--text-sm);
+      color: var(--col-text-muted); transition: all 0.15s; font-family: inherit;
+      min-height: 44px;
+    }
+    .btn-back:hover { border-color: var(--col-slate); color: var(--col-slate); }
+
+    /* Phase complete bar */
+    .complete-bar {
+      margin-top: 28px; padding-top: 20px;
+      border-top: 2px solid var(--col-border);
+      display: flex; justify-content: space-between; align-items: center; gap: 16px;
+      flex-wrap: wrap;
+    }
+    .complete-bar p { font-size: var(--text-sm); color: var(--col-text-muted); }
+
+    /* Info boxes */
+    .info-box {
+      background: var(--col-slate-pale);
+      border-left: 4px solid var(--col-slate-mid);
+      border-radius: 0 8px 8px 0; padding: 12px 16px;
+      font-size: var(--text-sm); color: var(--col-slate-dark); margin: 12px 0;
+    }
+    .info-box strong { display: block; margin-bottom: 4px; }
+    .warn-box {
+      background: var(--col-warning-pale);
+      border-left: 4px solid var(--col-warning);
+      border-radius: 0 8px 8px 0; padding: 12px 16px;
+      font-size: var(--text-sm); color: var(--col-warning-text); margin: 12px 0;
+    }
+    .warn-box strong { display: block; margin-bottom: 4px; }
+    .divider { border: none; border-top: 1px solid var(--col-border); margin: 22px 0; }
+
+    /* Right Sidebar */
+    .cockpit-side {
+      background: var(--col-white); border-left: 2px solid var(--col-border);
+      padding: 18px 16px; overflow-y: auto; max-height: calc(100vh - 88px);
+    }
+    .side-section { margin-bottom: 22px; }
+    .side-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--col-text-muted); margin-bottom: 10px;
+    }
+    details.hcard {
+      background: var(--col-slate-ghost);
+      border-left: 3px solid var(--col-slate-mid);
+      border-radius: 0 8px 8px 0; margin-bottom: 7px;
+    }
+    details.hcard summary {
+      padding: 9px 13px; cursor: pointer; font-size: var(--text-sm);
+      font-weight: 600; color: var(--col-slate); list-style: none;
+      display: flex; align-items: center; gap: 6px; user-select: none;
+    }
+    details.hcard summary::-webkit-details-marker { display: none; }
+    details.hcard summary::before { content: '▶'; font-size: 9px; transition: transform 0.2s; }
+    details.hcard[open] summary::before { transform: rotate(90deg); }
+    details.hcard .hcontent { padding: 0 13px 11px; font-size: var(--text-sm); }
+    details.hcard .hcontent ul { list-style: none; padding: 0; }
+    details.hcard .hcontent li { padding: 3px 0 3px 14px; position: relative; line-height: 1.5; }
+    details.hcard .hcontent li::before { content: '→'; position: absolute; left: 0; color: var(--col-slate-mid); font-size: var(--text-xs); top: 5px; }
+    details.hcard .hcontent ol { padding-left: 18px; line-height: 1.9; }
+
+    .mat-link {
+      display: flex; align-items: flex-start; gap: 9px;
+      padding: 9px 11px; background: var(--col-bg);
+      border: 1px solid var(--col-border); border-radius: 8px;
+      margin-bottom: 6px; text-decoration: none; color: var(--col-text);
+      transition: all 0.15s; cursor: pointer;
+    }
+    .mat-link:hover { background: var(--col-slate-ghost); border-color: var(--col-slate-mid); }
+    .mat-link[disabled] { opacity: 0.55; cursor: default; }
+    .mat-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .mat-type { font-size: 10px; color: var(--col-text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; }
+    .mat-title { font-size: var(--text-xs); color: var(--col-text); line-height: 1.4; }
+
+    /* ======= RESULTS VIEW ======= */
+    #view-results { max-width: 760px; margin: 0 auto; padding: 32px 24px 60px; }
+    .res-section {
+      background: var(--col-white); border-radius: 12px; padding: 22px 24px;
+      margin-bottom: 14px; border: 1px solid var(--col-border);
+      break-inside: avoid;
+    }
+    .res-section h3 { font-size: var(--text-md); color: var(--col-slate); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--col-border); }
+    .res-row { display: grid; grid-template-columns: 140px 1fr; gap: 8px; padding: 5px 0; font-size: var(--text-sm); border-bottom: 1px solid var(--col-bg); }
+    .res-row:last-child { border: none; }
+    .res-label { font-weight: 700; color: var(--col-text-muted); }
+    .res-val { color: var(--col-text); white-space: pre-wrap; word-break: break-word; }
+    .res-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+
+    /* ======= RESPONSIVE ======= */
+    @media (max-width: 820px) {
+      .cockpit-grid { grid-template-columns: 1fr; }
+      .cockpit-nav  { display: flex; padding: 0 8px; overflow-x: auto; }
+      .nav-btn      { white-space: nowrap; min-width: 110px; border-left: none; border-bottom: 3px solid transparent; }
+      .nav-btn.active { border-bottom-color: var(--col-rust); border-left: none; }
+      .cockpit-side { border-left: none; border-top: 2px solid var(--col-border); max-height: none; }
+      .cockpit-main { max-height: none; }
+      .projects-grid { grid-template-columns: 1fr; }
+      .area-grid     { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      .app-header, .phase-strip, .cockpit-nav, .cockpit-side,
+      .complete-bar, .btn, .btn-back, .res-actions { display: none !important; }
+      #view-results { padding: 0; max-width: 100%; }
+      .res-section { box-shadow: none; border: 1px solid #ccc; }
+    }
+
+    .mt-1 { margin-top: 6px; }
+    .mt-2 { margin-top: 10px; }
+    .mt-3 { margin-top: 14px; }
+    .mt-4 { margin-top: 20px; }
+    .text-muted { color: var(--col-text-muted); font-size: var(--text-sm); }
+  </style>
+</head>
+<body>
+
+<!-- ===== APP HEADER ===== -->
+<header class="app-header" id="app-header">
+  <div>
+    <h1>🎬 Film &amp; Sprache</h1>
+    <div class="sub">Projektnavi nach der ZP10 · HBG Dortmund</div>
+  </div>
+  <div class="header-project-badge" id="header-badge"></div>
+</header>
+
+<!-- ===== PHASE STRIP ===== -->
+<div class="phase-strip" id="phase-strip">
+  <div class="phase-step" data-pi="0" onclick="goToPhase(0)">① Planen</div>
+  <div class="phase-step" data-pi="1" onclick="goToPhase(1)">② Sammeln</div>
+  <div class="phase-step" data-pi="2" onclick="goToPhase(2)">③ Auswerten</div>
+  <div class="phase-step" data-pi="3" onclick="goToPhase(3)">④ Erstellen</div>
+  <div class="phase-step" data-pi="4" onclick="goToPhase(4)">⑤ Überarbeiten</div>
+  <div class="phase-step" data-pi="5" onclick="goToPhase(5)">⑥ Präsentieren</div>
+</div>
+
+<!-- ===== VIEW: START ===== -->
+<div id="view-start" class="view active">
+  <div id="view-start-inner">
+    <div class="start-hero">
+      <h2>Euer Projekt wartet 🚀</h2>
+      <p class="lead">In den nächsten 6 Doppelstunden arbeitet ihr an einem eigenen Projekt. Ihr entscheidet euch für Film oder Sprache und präsentiert am Ende ein fertiges Produkt.</p>
+      <div class="journey-pills">
+        <span class="journey-pill arrow">1 Projekt wählen</span>
+        <span class="journey-pill arrow">2 Material sammeln</span>
+        <span class="journey-pill arrow">3 Untersuchen</span>
+        <span class="journey-pill arrow">4 Produkt erstellen</span>
+        <span class="journey-pill arrow">5 Überarbeiten</span>
+        <span class="journey-pill">6 Präsentieren</span>
+      </div>
+    </div>
+    <div class="area-grid">
+      <div class="area-card film">
+        <div class="area-icon">🎥</div>
+        <h3>Filmanalyse</h3>
+        <p>Ihr untersucht, wie Filme wirken. Ihr achtet auf Kamera, Licht, Musik, Schnitt, Farben, Figuren und Spannung.</p>
+        <button class="btn btn-rust" onclick="showProjects('film')">Filmanalyse-Projekte ansehen →</button>
+      </div>
+      <div class="area-card sprache">
+        <div class="area-icon">🗣️</div>
+        <h3>Soziolinguistik</h3>
+        <p>Ihr untersucht, wie Menschen in verschiedenen Gruppen und Situationen unterschiedlich sprechen.</p>
+        <button class="btn btn-sage" onclick="showProjects('sprache')">Sprach-Projekte ansehen →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VIEW: PROJECTS ===== -->
+<div id="view-projects" class="view">
+  <div style="max-width:920px;margin:0 auto;padding:28px 24px 56px;">
+    <div class="view-header">
+      <button class="btn-back" onclick="showView('start')">← Zurück</button>
+      <h2 id="proj-title"></h2>
+    </div>
+    <div class="projects-grid" id="proj-grid"></div>
+  </div>
+</div>
+
+<!-- ===== VIEW: COCKPIT ===== -->
+<div id="view-cockpit" class="view">
+  <div class="cockpit-grid">
+    <nav class="cockpit-nav" id="cockpit-nav">
+      <div class="nav-project-box">
+        <div class="nav-project-label">Euer Projekt</div>
+        <div class="nav-project-name" id="nav-proj-name">–</div>
+      </div>
+      <button class="nav-btn" data-nav="0" onclick="goToPhase(0)"><span class="nav-num" id="nn0">1</span><span>Projekt planen<br><small style="opacity:.6">DS 1</small></span></button>
+      <button class="nav-btn" data-nav="1" onclick="goToPhase(1)"><span class="nav-num" id="nn1">2</span><span>Material sammeln<br><small style="opacity:.6">DS 2</small></span></button>
+      <button class="nav-btn" data-nav="2" onclick="goToPhase(2)"><span class="nav-num" id="nn2">3</span><span>Untersuchen<br><small style="opacity:.6">DS 3</small></span></button>
+      <button class="nav-btn" data-nav="3" onclick="goToPhase(3)"><span class="nav-num" id="nn3">4</span><span>Produkt erstellen<br><small style="opacity:.6">DS 4</small></span></button>
+      <button class="nav-btn" data-nav="4" onclick="goToPhase(4)"><span class="nav-num" id="nn4">5</span><span>Überarbeiten<br><small style="opacity:.6">DS 5</small></span></button>
+      <button class="nav-btn" data-nav="5" onclick="goToPhase(5)"><span class="nav-num" id="nn5">6</span><span>Präsentieren<br><small style="opacity:.6">DS 6</small></span></button>
+      <div class="nav-divider"></div>
+      <button class="nav-btn" onclick="switchProject()"><span class="nav-num">↩</span><span>Projekt wechseln</span></button>
+    </nav>
+    <main class="cockpit-main" id="cockpit-main"></main>
+    <aside class="cockpit-side" id="cockpit-side"></aside>
+  </div>
+</div>
+
+<!-- ===== VIEW: RESULTS ===== -->
+<div id="view-results" class="view">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+    <button class="btn-back" onclick="showView('cockpit')">← Zurück zum Cockpit</button>
+    <h2 style="font-size:var(--text-xl);color:var(--col-slate);">📋 Projektübersicht</h2>
+  </div>
+  <div id="results-body"></div>
+  <div class="res-actions">
+    <button class="btn btn-slate" id="copy-btn" onclick="copyResults()">📋 Als Text kopieren</button>
+    <button class="btn btn-ghost" onclick="window.print()">🖨️ Drucken / PDF speichern</button>
+    <button class="btn-back" onclick="showView('cockpit')">← Zurück zum Projekt</button>
+  </div>
+</div>
+
+<script>
+// =====================================================
+// DATA DEFINITIONS
+// =====================================================
+
+const PROJECTS = [
+  { id:0, title:'Eine Szene unter der Lupe',       area:'film',    icon:'🎬',
+    desc:'Ihr untersucht eine kurze Filmszene und erklärt, wie Kamera, Musik, Licht und Schnitt wirken.',
+    tags:['Präsentation','Erklärvideo','Analyseplakat'] },
+  { id:1, title:'Trailer bauen – Wirkung planen',  area:'film',    icon:'🎞️',
+    desc:'Ihr entwickelt einen eigenen Trailer oder ein Storyboard und erklärt, welche Wirkung ihr erzeugen wollt.',
+    tags:['Video','Storyboard','Making-of'] },
+  { id:2, title:'Genre-Check',                     area:'film',    icon:'🎭',
+    desc:'Ihr untersucht ein Filmgenre und erklärt, woran man es erkennt.',
+    tags:['Genre-Dossier','Präsentation','Plakat'] },
+  { id:3, title:'Sprache in Gruppen',              area:'sprache', icon:'👥',
+    desc:'Ihr untersucht die Sprache einer bestimmten Gruppe, z.B. Jugend-, Gamer-, Fußball- oder Berufssprache.',
+    tags:['Glossar','Präsentation','Digitales Plakat'] },
+  { id:4, title:'Sprachdetektive im Alltag',       area:'sprache', icon:'🔍',
+    desc:'Ihr vergleicht, wie Menschen in verschiedenen Situationen unterschiedlich sprechen.',
+    tags:['Fallstudie','Podcast','Vergleichsplakat'] },
+  { id:5, title:'Code-Switching',                  area:'sprache', icon:'🔀',
+    desc:'Ihr untersucht, warum Menschen zwischen verschiedenen Sprachformen wechseln.',
+    tags:['Erklärvideo','Podcast','Dialogvergleich'] },
+];
+
+const PHASE_NAMES = [
+  'Projekt planen','Material sammeln','Untersuchen & Auswerten',
+  'Produkt erstellen','Überarbeiten & Feedback','Präsentieren & Reflektieren'
+];
+
+const FILM_CHECKS  = ['Kamera','Licht','Farben','Musik','Geräusche','Schnitt','Schauspiel','Dialoge','Spannung','Symbole'];
+const SPRA_CHECKS  = ['besondere Wörter','Abkürzungen','Emojis','Satzbau','Anrede','Höflichkeit','Fachwörter','Umgangssprache','Dialekt','Mehrsprachigkeit'];
+
+const PRODUCT_LIST = ['Präsentation','Erklärvideo','Podcast','Storyboard / Trailer','Plakat','Glossar','Fallstudie','Spielszenen / Dialogvergleich','anderes Produkt'];
+
+const PROD_STRUCT = {
+  'Präsentation':    { icon:'📊', items:['Folie 1: Thema und Leitfrage','Folie 2: Material / Beispiele','Folie 3: Analyse 1','Folie 4: Analyse 2','Folie 5: Wichtigste Ergebnisse','Folie 6: Fazit und Quellen'] },
+  'Erklärvideo':     { icon:'🎥', items:['Szene 1: Einstieg','Szene 2: Begriff / Thema erklären','Szene 3: Beispiel zeigen','Szene 4: Beispiel auswerten','Szene 5: Fazit'] },
+  'Podcast':         { icon:'🎙️', items:['Teil 1: Begrüßung','Teil 2: Thema und Leitfrage','Teil 3: Beispiele','Teil 4: Gespräch / Erklärung','Teil 5: Ergebnis','Teil 6: Abschluss'] },
+  'Plakat':          { icon:'🖼️', items:['Titel und Leitfrage','Beispiele / Bilder','Analyse und Ergebnisse','Fazit','Quellen'] },
+  'Storyboard / Trailer': { icon:'🎞️', items:['Szene 1: Einstieg / Titel','Szene 2: Thema vorstellen','Szene 3: Hauptbeispiel','Szene 4: Auswertung','Szene 5: Fazit / Abspann'] },
+};
+
+const SATZSTARTER = {
+  film: [
+    ['Eine gute Leitfrage fragt nach Wirkung','„Wie erzeugt … Spannung?"','„Welche Wirkung hat die Musik?"','„Woran erkennt man Horrorfilme?"'],
+    ['In der Szene ist zu sehen, dass …','Die Kamera zeigt …','Im Hintergrund hört man …','Der Schnitt wirkt …'],
+    ['In der Szene fällt auf, dass …','Die Kamera zeigt …','Die Musik wirkt …','Durch das Licht entsteht …','Der Schnitt sorgt dafür, dass …','Die Zuschauer:innen sollen vermutlich …','Dadurch wirkt die Szene …'],
+    ['Unser Produkt erklärt, wie …','Wir zeigen daran, dass …','Als Fazit formulieren wir …'],
+    ['Das fanden wir besonders stark …','Wir würden noch ergänzen …','Die Leitfrage beantworten wir so: …'],
+    ['Wir haben gelernt, dass …','Überraschend war für uns …','Beim nächsten Mal würden wir …'],
+  ],
+  sprache: [
+    ['Eine gute Leitfrage fragt nach Merkmalen','„Welche Wörter sind typisch für …?"','„Warum wechseln Menschen …?"','„Wie verändert sich Sprache zwischen …?"'],
+    ['Typisch für diese Gruppe ist …','Besonders auffällig ist das Wort …','Die Sprache wirkt …'],
+    ['In diesem Beispiel fällt auf, dass …','Typisch für diese Sprache ist …','Diese Formulierung wirkt …','Die Sprache zeigt, dass …','In dieser Situation passt die Sprache, weil …','Für Außenstehende kann das schwierig sein, weil …','Der Unterschied zur Standardsprache besteht darin, dass …'],
+    ['Unser Produkt zeigt, wie …','Wir erklären anhand von Beispielen, dass …','Als Fazit formulieren wir …'],
+    ['Das fanden wir besonders stark …','Wir würden noch ergänzen …','Die Leitfrage beantworten wir so: …'],
+    ['Wir haben gelernt, dass …','Überraschend war für uns …','Beim nächsten Mal würden wir …'],
+  ]
+};
+
+const MATERIALS_FILM = [
+  { icon:'🎬', type:'Portal · bpb.de',        title:'Filmbildung – Überblick & Unterrichtsmaterial',           url:'https://www.bpb.de/lernen/filmbildung/' },
+  { icon:'📖', type:'Glossar · kinofenster.de', title:'Filmglossar: Fachbegriffe von A–Z',                      url:'https://www.kinofenster.de/unterrichten/filmglossar' },
+  { icon:'🎥', type:'Methode · kinofenster.de', title:'Szenenanalyse – Schritt für Schritt',                    url:'https://www.kinofenster.de/unterrichten/methoden/34917/szenenanalyse' },
+  { icon:'📚', type:'Einführung · lmz-bw.de',  title:'Filmanalyse im Unterricht: Fachbegriffe & Methoden',     url:'https://www.lmz-bw.de/filmbildung/im-unterricht-ueber-filme-sprechen' },
+  { icon:'🎞️', type:'Methoden · visionkino.de', title:'Methoden der Filmbildung (vor / während / nach dem Film)', url:'https://www.visionkino.de/unterrichtsmaterial/methoden/' },
+  { icon:'📺', type:'YouTube-Suche',            title:'„Filmanalyse einfach erklärt Schule"',                   url:'https://www.youtube.com/results?search_query=filmanalyse+einfach+erklärt+schule' },
+];
+const MATERIALS_SPRA = [
+  { icon:'🗣️', type:'Videos · planet-schule.de', title:'Sprache einfach erklärt – Erklärvideos für Klasse 5–10', url:'https://www.planet-schule.de/schwerpunkt/sprache-einfach-erklaert/index.html' },
+  { icon:'🔀', type:'Info · dazunterricht.at',    title:'Code-Switching: Definition & Beispiele',                  url:'https://www.dazunterricht.at/glossar/code-switching/' },
+  { icon:'📖', type:'Nachschlagewerk · Wikipedia', title:'Code-Switching – ausführlicher Wikipedia-Artikel',       url:'https://de.wikipedia.org/wiki/Code-Switching' },
+  { icon:'📺', type:'YouTube-Suche',              title:'„Soziolekt einfach erklärt"',                              url:'https://www.youtube.com/results?search_query=soziolekt+einfach+erklärt' },
+  { icon:'🔍', type:'Suchbegriff',                title:'„Jugendsprache Merkmale Beispiele"',                       url:null },
+  { icon:'💬', type:'Suchbegriff',                title:'„Standardsprache Umgangssprache Unterschied"',             url:null },
+];
+const MATERIALS_GLOBAL = [
+  { icon:'📄', type:'Tipp',   title:'Quellen richtig notieren', url:null },
+  { icon:'🎤', type:'Tipp',   title:'Tipps für Präsentationen', url:null },
+];
+
+const SELF_CHECKS = [
+  'Unser Thema ist klar.',
+  'Unsere Leitfrage ist sichtbar.',
+  'Wir zeigen passende Beispiele.',
+  'Wir erklären die Beispiele.',
+  'Wir erklären Wirkung oder Bedeutung.',
+  'Unser Produkt ist übersichtlich.',
+  'Unsere Quellen sind angegeben.',
+  'Jede Person aus der Gruppe kann etwas erklären.',
+];
+
+// =====================================================
+// STATE
+// =====================================================
+
+const STORAGE_KEY = 'hbg-film-sprache-v2';
+
+let S = {
+  view: 'start',
+  projectId: null,
+  phase: 0,
+  done: [false,false,false,false,false,false],
+  // Phase 1
+  members:'', leitfrage:'', product:'', aufgaben:'', needs:'',
+  // Phase 2
+  mat_focus:'', mat_examples:'', mat_sources:'', mat_checks:[],
+  // Phase 3
+  acards: [],
+  erk: ['','',''],
+  // Phase 4
+  prod_type:'', prod_plan:'',
+  glossar_rows: [['','','','','']],
+  story_rows: [['','','','']],
+  // Phase 5
+  self_checks: [],
+  fb_pos:'', fb_int:'', fb_impr:'', fb_q:'', impr_plan:'',
+  // Phase 6
+  refl_learn:'', refl_good:'', refl_hard:'', refl_next:'', refl_other:'',
+};
+
+function save() {
+  collectForms();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(S));
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) Object.assign(S, JSON.parse(raw));
+  } catch(e) {}
+}
+
+function collectForms() {
+  document.querySelectorAll('[data-k]').forEach(el => {
+    const k = el.dataset.k;
+    if (el.tagName === 'SELECT') S[k] = el.value;
+    else S[k] = el.value;
+  });
+  // Checkboxes
+  ['mat_checks','self_checks'].forEach(g => {
+    const boxes = document.querySelectorAll(`[data-cg="${g}"]`);
+    if (boxes.length) {
+      S[g] = [];
+      boxes.forEach(b => { if (b.checked) S[g].push(b.dataset.ci); });
+    }
+  });
+  // Analysis cards
+  const cardEls = document.querySelectorAll('.acard[data-ci]');
+  if (cardEls.length) {
+    S.acards = [];
+    cardEls.forEach(card => {
+      const obj = {};
+      card.querySelectorAll('[data-cf]').forEach(f => { obj[f.dataset.cf] = f.value || ''; });
+      S.acards.push(obj);
+    });
+  }
+  // Erkenntnisse
+  for (let i=0;i<3;i++) {
+    const el = document.querySelector(`[data-erk="${i}"]`);
+    if (el) S.erk[i] = el.value;
+  }
+  // Glossar
+  const gr = document.querySelectorAll('.grow');
+  if (gr.length) {
+    S.glossar_rows = [];
+    gr.forEach(r => S.glossar_rows.push(Array.from(r.querySelectorAll('input')).map(i=>i.value)));
+  }
+  // Storyboard
+  const sr = document.querySelectorAll('.strow');
+  if (sr.length) {
+    S.story_rows = [];
+    sr.forEach(r => S.story_rows.push(Array.from(r.querySelectorAll('input')).map(i=>i.value)));
+  }
+}
+
+// =====================================================
+// NAVIGATION
+// =====================================================
+
+function showView(id) {
+  save();
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  document.getElementById('phase-strip').classList.toggle('visible', id==='cockpit');
+  S.view = id;
+}
+
+function showProjects(area) {
+  S.currentArea = area;
+  const filtered = PROJECTS.filter(p=>p.area===area);
+  document.getElementById('proj-title').textContent = area==='film' ? '🎥 Filmanalyse-Projekte' : '🗣️ Sprach-Projekte';
+  document.getElementById('proj-grid').innerHTML = filtered.map(p=>`
+    <div class="project-card ${p.area}">
+      <div class="project-card-top">
+        <span class="proj-num ${p.area}">${p.id+1}</span>
+        <h4>${p.icon} ${p.title}</h4>
+      </div>
+      <p>${p.desc}</p>
+      <div class="proj-tags">${p.tags.map(t=>`<span class="proj-tag">${t}</span>`).join('')}</div>
+      <button class="btn ${p.area==='film'?'btn-rust':'btn-sage'} mt-2" onclick="selectProject(${p.id})" style="width:100%">Dieses Projekt wählen</button>
+    </div>`).join('');
+  showView('projects');
+}
+
+function selectProject(id) {
+  if (S.projectId !== null && S.projectId !== id) {
+    if (!confirm('Wenn ihr ein anderes Projekt wählt, werden alle bisherigen Eingaben gelöscht. Fortfahren?')) return;
+    resetData();
+  } else if (S.projectId === null) {
+    resetData();
+  }
+  S.projectId = id;
+  S.phase = 0;
+  applyProjectTheme();
+  updateNav();
+  showView('cockpit');
+  renderPhase(0);
+}
+
+function switchProject() {
+  showView('start');
+}
+
+function resetData() {
+  Object.assign(S, {
+    phase:0, done:[false,false,false,false,false,false],
+    members:'', leitfrage:'', product:'', aufgaben:'', needs:'',
+    mat_focus:'', mat_examples:'', mat_sources:'', mat_checks:[],
+    acards:[], erk:['','',''],
+    prod_type:'', prod_plan:'',
+    glossar_rows:[['','','','','']], story_rows:[['','','','']],
+    self_checks:[],
+    fb_pos:'', fb_int:'', fb_impr:'', fb_q:'', impr_plan:'',
+    refl_learn:'', refl_good:'', refl_hard:'', refl_next:'', refl_other:'',
+  });
+}
+
+function applyProjectTheme() {
+  if (!S.projectId === null) return;
+  const p = PROJECTS[S.projectId];
+  document.getElementById('nav-proj-name').textContent = p.icon+' '+p.title;
+  document.getElementById('header-badge').textContent = p.icon+' '+p.title;
+  document.getElementById('header-badge').style.display = 'inline-block';
+}
+
+function goToPhase(idx) {
+  save();
+  S.phase = idx;
+  updateNav();
+  renderPhase(idx);
+}
+
+function completePhase(idx) {
+  collectForms();
+  S.done[idx] = true;
+  save();
+  updateNav();
+  if (idx < 5) goToPhase(idx+1);
+  else showResults();
+}
+
+function updateNav() {
+  for (let i=0;i<6;i++) {
+    const nb = document.querySelector(`[data-nav="${i}"]`);
+    const ps = document.querySelector(`[data-pi="${i}"]`);
+    const nn = document.getElementById(`nn${i}`);
+    if (!nb || !ps) continue;
+    nb.classList.remove('active','done'); ps.classList.remove('active','done');
+    if (i===S.phase) {
+      nb.classList.add('active'); ps.classList.add('active');
+      if(nn) nn.textContent = i+1;
+    } else if (S.done[i]) {
+      nb.classList.add('done'); ps.classList.add('done');
+      if(nn) nn.textContent = '✓';
+    } else {
+      if(nn) nn.textContent = i+1;
+    }
+  }
+}
+
+// =====================================================
+// PHASE RENDERING
+// =====================================================
+
+function renderPhase(idx) {
+  if (S.projectId === null) return;
+  const project = PROJECTS[S.projectId];
+  const isFilm = project.area === 'film';
+  const main = document.getElementById('cockpit-main');
+  const side = document.getElementById('cockpit-side');
+
+  switch(idx) {
+    case 0: main.innerHTML = html_p1(project); break;
+    case 1: main.innerHTML = html_p2(isFilm); break;
+    case 2: main.innerHTML = html_p3(isFilm); break;
+    case 3: main.innerHTML = html_p4(project); break;
+    case 4: main.innerHTML = html_p5(); break;
+    case 5: main.innerHTML = html_p6(); break;
+  }
+  side.innerHTML = html_side(idx, isFilm);
+  restoreForms();
+  main.scrollTop = 0;
+}
+
+function ph(ds, title, goal) {
+  return `<div class="phase-header">
+    <div class="phase-label">Doppelstunde ${ds}</div>
+    <h2 class="phase-h2">${title}</h2>
+    <p class="phase-goal">${goal}</p>
+  </div>`;
+}
+
+function ff(label, key, rows=3, placeholder='') {
+  return `<div class="form-group">
+    <label for="f-${key}">${label}</label>
+    <textarea id="f-${key}" data-k="${key}" rows="${rows}" placeholder="${placeholder}"></textarea>
+  </div>`;
+}
+
+function fin(label, key, placeholder='') {
+  return `<div class="form-group">
+    <label for="f-${key}">${label}</label>
+    <input type="text" id="f-${key}" data-k="${key}" placeholder="${placeholder}" style="font-size:1rem;">
+  </div>`;
+}
+
+function sel(label, key, options, onChange='') {
+  const opts = options.map(o=>`<option value="${o}">${o}</option>`).join('');
+  return `<div class="form-group">
+    <label for="f-${key}">${label}</label>
+    <select id="f-${key}" data-k="${key}" style="font-size:1rem;" ${onChange?`onchange="${onChange}"`:''}>
+      <option value="">– bitte wählen –</option>${opts}
+    </select>
+  </div>`;
+}
+
+function completebar(idx) {
+  const done = S.done[idx];
+  return `<div class="complete-bar">
+    <p>${done ? '✅ Phase abgeschlossen. Ihr könnt noch Änderungen vornehmen.' : 'Wenn ihr fertig seid, klickt auf „Phase abschließen".'}</p>
+    <button class="btn btn-sage" onclick="completePhase(${idx})">Phase abschließen ✓</button>
+  </div>`;
+}
+
+// ----- PHASE 1: PLANEN -----
+function html_p1(project) {
+  const allProds = [...new Set([...project.tags, ...PRODUCT_LIST])];
+  const opts = allProds.map(p=>`<option value="${p}">${p}</option>`).join('');
+  return ph(1,'🗺️ Projekt planen','Ihr wählt eure Leitfrage und plant euer Vorgehen für die nächsten sechs Doppelstunden.')
+    + fin('👥 Unsere Gruppenmitglieder:', 'members', 'Namen eintippen …')
+    + ff('❓ Unsere Leitfrage:', 'leitfrage', 3, 'z. B. Wie erzeugt die Filmszene Spannung?')
+    + `<div class="form-group">
+      <label for="f-product">🎯 Unser geplantes Produkt:</label>
+      <select id="f-product" data-k="product" style="font-size:1rem;">
+        <option value="">– bitte wählen –</option>${opts}
+      </select>
+    </div>`
+    + ff('📋 Unsere Aufgabenverteilung:', 'aufgaben', 3, 'Wer macht was?')
+    + ff('🛠️ Das brauchen wir:', 'needs', 2, 'Materialien, Geräte, Apps …')
+    + completebar(0);
+}
+
+// ----- PHASE 2: MATERIAL SAMMELN -----
+function html_p2(isFilm) {
+  const checks = isFilm ? FILM_CHECKS : SPRA_CHECKS;
+  const chipHTML = checks.map((c,i)=>`
+    <label class="chip">
+      <input type="checkbox" data-cg="mat_checks" data-ci="${i}" ${S.mat_checks.includes(String(i))?'checked':''}>
+      ${c}
+    </label>`).join('');
+
+  const focusLabel = isFilm
+    ? '🎥 Unsere Szene / unser Trailer / unser Genre:'
+    : '👥 Unsere untersuchte Gruppe oder Situation:';
+  const focusPlaceholder = isFilm
+    ? 'Film, Titel, Zeitmarke, Genre …'
+    : 'z. B. Jugendliche im Chat, Gamingsprache, Bewerbungsgespräch …';
+  const exLabel = isFilm ? '📝 Unsere Filmbeispiele:' : '💬 Unsere Sprachbeispiele:';
+  const exPlaceholder = isFilm
+    ? 'Was habt ihr gefunden? Wann? Wie? …'
+    : 'Zitate, Begriffe, Beispielsätze (anonymisiert!) …';
+  const checklabel = isFilm
+    ? 'Diese filmischen Mittel fallen uns auf:'
+    : 'Diese sprachlichen Merkmale fallen uns auf:';
+
+  return ph(2, isFilm?'🎬 Material sammeln':'🗣️ Material sammeln',
+    'Ihr sammelt Beispiele, Szenen, Begriffe oder Sprachmaterial für euer Projekt.')
+    + ff(focusLabel, 'mat_focus', 3, focusPlaceholder)
+    + `<div class="form-group">
+      <label>${checklabel}</label>
+      <div class="chip-group">${chipHTML}</div>
+    </div>`
+    + ff(exLabel, 'mat_examples', 4, exPlaceholder)
+    + ff('🔗 Unsere Quellen:', 'mat_sources', 2, 'Filmtitel, Plattform, Website, Zeitmarke …')
+    + (isFilm ? '' : `<div class="warn-box"><strong>⚠️ Wichtig: Datenschutz</strong>
+      Wenn ihr echte Gespräche oder Chats nutzt, entfernt Namen und private Informationen. Verwendet keine Inhalte, die andere bloßstellen.</div>`)
+    + completebar(1);
+}
+
+// ----- PHASE 3: UNTERSUCHEN -----
+function html_p3(isFilm) {
+  const cards = S.acards.length > 0 ? S.acards : [{}];
+  const cardsHTML = cards.map((c,i) => mkCard(i,c,isFilm)).join('');
+  return ph(3,'🔎 Untersuchen &amp; Auswerten',
+    'Jetzt geht es darum zu erklären – nicht nur zu beschreiben! Was bewirkt das, was ihr gefunden habt?')
+    + `<div class="info-box"><strong>💡 Euer Auftrag heute:</strong>
+      Wählt mindestens 3 Beispiele aus. Bearbeitet zu jedem eine Analysekarte.
+      Erklärt immer die <em>Wirkung</em> – nicht nur, was ihr seht oder hört!</div>`
+    + `<div class="cards-wrap" id="cards-wrap">${cardsHTML}</div>`
+    + `<button class="btn-add mt-2" onclick="addCard()">+ Weiteres Beispiel hinzufügen</button>`
+    + `<hr class="divider">`
+    + `<h3 style="font-size:var(--text-md);color:var(--col-slate);margin-bottom:10px;">📊 Unsere drei wichtigsten Erkenntnisse</h3>`
+    + `<p class="text-muted" style="margin-bottom:12px;">Fasst zusammen, was ihr herausgefunden habt.</p>`
+    + [0,1,2].map(i=>`<div class="form-group">
+      <label for="erk${i}">Erkenntnis ${i+1}:</label>
+      <textarea id="erk${i}" data-erk="${i}" rows="2" placeholder="Was haben wir herausgefunden?">${S.erk[i]||''}</textarea>
+    </div>`).join('')
+    + completebar(2);
+}
+
+function mkCard(idx, data, isFilm) {
+  const removable = idx > 0;
+  const rmBtn = removable ? `<button class="btn-rm" onclick="removeCard(${idx})" title="Karte entfernen" aria-label="Analysekarte entfernen">×</button>` : '';
+
+  if (isFilm) {
+    const mittelOpts = FILM_CHECKS.map(m=>`<option value="${m}" ${data.mittel===m?'selected':''}>${m}</option>`).join('');
+    return `<div class="acard" data-ci="${idx}">
+      <div class="acard-head"><span class="acard-title">🎬 Analysekarte ${idx+1}</span>${rmBtn}</div>
+      <div class="form-group"><label>Unser Beispiel (Szene / Moment):</label>
+        <textarea data-cf="example" rows="2" placeholder="Welche Szene? Wann?">${data.example||''}</textarea></div>
+      <div class="form-group"><label>Was sieht / hört man?</label>
+        <textarea data-cf="observation" rows="2" placeholder="Genau beschreiben …">${data.observation||''}</textarea></div>
+      <div class="form-group"><label>Welches filmische Mittel wird genutzt?</label>
+        <select data-cf="mittel" style="font-size:1rem;"><option value="">– wählen –</option>${mittelOpts}</select></div>
+      <div class="form-group"><label>Welche Wirkung entsteht?</label>
+        <textarea data-cf="effect" rows="2" placeholder="Was fühlen Zuschauer:innen?">${data.effect||''}</textarea></div>
+      <div class="form-group"><label>🏁 Unser Ergebnis in einem Satz:</label>
+        <textarea data-cf="result" rows="2" placeholder="Durch … entsteht die Wirkung …">${data.result||''}</textarea></div>
+    </div>`;
+  } else {
+    const merkOpts = SPRA_CHECKS.map(m=>`<option value="${m}" ${data.merkmal===m?'selected':''}>${m}</option>`).join('');
+    return `<div class="acard" data-ci="${idx}">
+      <div class="acard-head"><span class="acard-title">🗣️ Analysekarte ${idx+1}</span>${rmBtn}</div>
+      <div class="form-group"><label>Sprachbeispiel (anonymisiert):</label>
+        <textarea data-cf="example" rows="2" placeholder="Zitat, Begriff, Satz …">${data.example||''}</textarea></div>
+      <div class="form-group"><label>In welcher Situation wird so gesprochen?</label>
+        <textarea data-cf="observation" rows="2" placeholder="Gruppe, Ort, Medium …">${data.observation||''}</textarea></div>
+      <div class="form-group"><label>Was fällt sprachlich auf?</label>
+        <select data-cf="merkmal" style="font-size:1rem;"><option value="">– wählen –</option>${merkOpts}</select></div>
+      <div class="form-group"><label>Welche Wirkung hat das?</label>
+        <textarea data-cf="effect" rows="2" placeholder="Wie wirkt diese Sprache auf andere?">${data.effect||''}</textarea></div>
+      <div class="form-group"><label>Was zeigt das über die Gruppe oder Situation?</label>
+        <textarea data-cf="result" rows="2" placeholder="Was lernt man daraus?">${data.result||''}</textarea></div>
+    </div>`;
+  }
+}
+
+// ----- PHASE 4: PRODUKT ERSTELLEN -----
+function html_p4(project) {
+  const selProd = S.prod_type || S.product || '';
+  const struct = PROD_STRUCT[selProd];
+  const structHTML = struct ? `<div class="prod-struct">
+    <h5>${struct.icon} Vorschlag: Mögliche Struktur</h5>
+    ${struct.items.map((it,i)=>`<div class="struct-row"><span class="struct-num">${i+1}</span><span>${it}</span></div>`).join('')}
+  </div>` : '';
+
+  const opts = PRODUCT_LIST.map(p=>`<option value="${p}" ${selProd===p?'selected':''}>${p}</option>`).join('');
+
+  let tableHTML = '';
+  if (selProd === 'Glossar') {
+    const rows = S.glossar_rows.length ? S.glossar_rows : [['','','','','']];
+    tableHTML = `<div style="overflow-x:auto;margin:12px 0;">
+      <table class="edit-table">
+        <thead><tr><th>Begriff</th><th>Bedeutung</th><th>Wer nutzt das?</th><th>Beispielsatz</th><th>Wirkung</th></tr></thead>
+        <tbody id="g-body">${rows.map(r=>`<tr class="grow"><td><input type="text" value="${r[0]||''}" placeholder="Begriff"></td><td><input type="text" value="${r[1]||''}" placeholder="Bedeutung"></td><td><input type="text" value="${r[2]||''}" placeholder="Gruppe"></td><td><input type="text" value="${r[3]||''}" placeholder="Beispielsatz"></td><td><input type="text" value="${r[4]||''}" placeholder="Wirkung"></td></tr>`).join('')}</tbody>
+      </table></div>
+    <button class="btn-add" onclick="addGrow()">+ Begriff hinzufügen</button>`;
+  }
+  if (selProd === 'Storyboard / Trailer') {
+    const rows = S.story_rows.length ? S.story_rows : [['','','','']];
+    tableHTML = `<div style="overflow-x:auto;margin:12px 0;">
+      <table class="edit-table">
+        <thead><tr><th>Szene</th><th>Bild / Beschreibung</th><th>Ton / Musik</th><th>Wirkung</th></tr></thead>
+        <tbody id="s-body">${rows.map((r,i)=>`<tr class="strow"><td><input type="text" value="${r[0]||i+1}" placeholder="${i+1}"></td><td><input type="text" value="${r[1]||''}" placeholder="Was ist zu sehen?"></td><td><input type="text" value="${r[2]||''}" placeholder="Musik, Geräusch …"></td><td><input type="text" value="${r[3]||''}" placeholder="Welche Wirkung?"></td></tr>`).join('')}</tbody>
+      </table></div>
+    <button class="btn-add" onclick="addStrow()">+ Szene hinzufügen</button>`;
+  }
+
+  const planField = (!tableHTML) ? ff('📝 Unser Plan / Skript / Gliederung:', 'prod_plan', 5, 'Struktur, Inhalte, Skript …') : '';
+
+  return ph(4,'🛠️ Produkt erstellen','Ihr plant euer Endprodukt und beginnt mit der Gestaltung.')
+    + `<div class="form-group">
+      <label for="f-prod_type">Welches Produkt erstellt ihr?</label>
+      <select id="f-prod_type" data-k="prod_type" style="font-size:1rem;" onchange="save();renderPhase(3);">
+        <option value="">– bitte wählen –</option>${opts}
+      </select>
+    </div>`
+    + structHTML + tableHTML + planField
+    + completebar(3);
+}
+
+// ----- PHASE 5: ÜBERARBEITEN -----
+function html_p5() {
+  const checks = SELF_CHECKS.map((it,i)=>`
+    <label class="check-item">
+      <input type="checkbox" data-cg="self_checks" data-ci="${i}" ${S.self_checks.includes(String(i))?'checked':''}>
+      <span>${it}</span>
+    </label>`).join('');
+
+  return ph(5,'✏️ Überarbeiten &amp; Feedback','Stellt euer Produkt fertig, holt Feedback ein und verbessert es.')
+    + `<h3 style="font-size:var(--text-md);color:var(--col-slate);margin-bottom:10px;">✅ Selbstcheck</h3>`
+    + `<div class="checklist" style="margin-bottom:22px;">${checks}</div>`
+    + `<hr class="divider">`
+    + `<h3 style="font-size:var(--text-md);color:var(--col-slate);margin-bottom:8px;">💬 Peer-Feedback</h3>`
+    + `<p class="text-muted" style="margin-bottom:14px;">Gebt euer Produkt einer anderen Gruppe. Tragt hier das Feedback ein, das ihr erhaltet.</p>`
+    + ff('👍 Das ist verständlich:', 'fb_pos', 2, 'Was hat die andere Gruppe verstanden?')
+    + ff('⭐ Das ist interessant:', 'fb_int', 2, 'Was hat überrascht oder interessiert?')
+    + ff('❓ Das könnte noch klarer werden:', 'fb_impr', 2, 'Was war unklar oder fehlt noch?')
+    + ff('🤔 Diese Frage haben wir noch:', 'fb_q', 2, '')
+    + `<hr class="divider">`
+    + ff('🔧 Das verbessern wir jetzt:', 'impr_plan', 2, 'Was nehmt ihr aus dem Feedback mit?')
+    + completebar(4);
+}
+
+// ----- PHASE 6: PRÄSENTIEREN -----
+function html_p6() {
+  return ph(6,'🎤 Präsentieren &amp; Reflektieren','Ihr präsentiert euer Ergebnis und denkt über euren Lernprozess nach.')
+    + `<div class="info-box" style="margin-bottom:20px;"><strong>📋 Euer roter Faden für die Präsentation:</strong>
+      <ol style="padding-left:18px;margin-top:8px;line-height:2.1;font-size:var(--text-sm);">
+        <li>Unser Thema war …</li>
+        <li>Unsere Leitfrage war …</li>
+        <li>Wir haben untersucht …</li>
+        <li>Besonders auffällig war …</li>
+        <li>Herausgefunden haben wir …</li>
+        <li>Schwierig war …</li>
+        <li>Interessant war …</li>
+      </ol></div>`
+    + `<hr class="divider">`
+    + `<h3 style="font-size:var(--text-md);color:var(--col-slate);margin-bottom:14px;">🪞 Reflexion</h3>`
+    + ff('💡 Das habe ich über Film oder Sprache gelernt:', 'refl_learn', 2)
+    + ff('🌟 Das ist uns gut gelungen:', 'refl_good', 2)
+    + ff('😤 Das war schwierig:', 'refl_hard', 2)
+    + ff('🔄 Das würde ich beim nächsten Projekt anders machen:', 'refl_next', 2)
+    + ff('👀 Ein anderes Projekt, das ich interessant fand:', 'refl_other', 2)
+    + `<div class="complete-bar">
+      <p>Wenn ihr fertig seid, erstellt eure Projektübersicht.</p>
+      <button class="btn btn-sage" onclick="showResults()">📋 Projektübersicht erstellen</button>
+    </div>`;
+}
+
+// ----- SIDEBAR -----
+function html_side(phaseIdx, isFilm) {
+  const area = isFilm ? 'film' : 'sprache';
+  const starters = SATZSTARTER[area][phaseIdx] || [];
+  const starterHTML = starters.map(s=>`<li>${s}</li>`).join('');
+
+  let extraHelp = '';
+  if (phaseIdx === 0) {
+    extraHelp = `<details class="hcard">
+      <summary>💡 Leitfrage finden</summary>
+      <div class="hcontent"><ul>
+        <li>Eine gute Leitfrage ist genau genug, um euer Projekt einzugrenzen.</li>
+        ${isFilm
+          ? '<li>Wie erzeugt eine Filmszene Spannung?</li><li>Welche Wirkung hat Musik im Trailer?</li><li>Woran erkennt man Horrorfilme?</li>'
+          : '<li>Welche Begriffe sind typisch für Gamersprache?</li><li>Wie verändert sich Sprache zwischen Chat und Bewerbung?</li><li>Warum wechseln Menschen zwischen Dialekt und Standardsprache?</li>'}
+      </ul></div>
+    </details>`;
+  }
+  if (phaseIdx === 2) {
+    extraHelp = `<details class="hcard">
+      <summary>🔬 Analyse-Assistent</summary>
+      <div class="hcontent">
+        ${isFilm
+          ? `<ol><li>Was sieht man?</li><li>Was hört man?</li><li>Welches Mittel fällt auf?</li><li>Welche Wirkung entsteht?</li><li>Wie passt das zur Szene?</li></ol>`
+          : `<ol><li>Wer spricht?</li><li>In welcher Situation?</li><li>Welche Wörter / Formen fallen auf?</li><li>Wie wirkt das?</li><li>Was zeigt das über Gruppe oder Beziehung?</li></ol>`}
+      </div>
+    </details>`;
+  }
+  if (phaseIdx === 4) {
+    extraHelp = `<details class="hcard">
+      <summary>💬 Feedback geben – Tipps</summary>
+      <div class="hcontent"><ul>
+        <li>Beschreibt, bevor ihr bewertet.</li>
+        <li>Beginnt mit Positivem.</li>
+        <li>Formuliert Verbesserungen als Fragen: „Könntet ihr noch erklären, …?"</li>
+      </ul></div>
+    </details>`;
+  }
+
+  const mats = [...(isFilm ? MATERIALS_FILM : MATERIALS_SPRA), ...MATERIALS_GLOBAL];
+  const matsHTML = mats.map(m=>`
+    <a class="mat-link" ${m.url ? `href="${m.url}" target="_blank" rel="noopener"` : 'disabled onclick="return false;"'}>
+      <span class="mat-icon">${m.icon}</span>
+      <div><div class="mat-type">${m.type}</div><div class="mat-title">${m.title}</div></div>
+    </a>`).join('');
+
+  return `<div class="side-section">
+    <div class="side-title">💡 Satzstarter &amp; Hilfen</div>
+    <details class="hcard" open>
+      <summary>Satzstarter für diese Phase</summary>
+      <div class="hcontent"><ul>${starterHTML}</ul></div>
+    </details>
+    ${extraHelp}
+  </div>
+  <div class="side-section">
+    <div class="side-title">📚 Materialien &amp; Links</div>
+    ${matsHTML}
+  </div>
+  <div class="side-section">
+    <div class="side-title">ℹ️ Datenspeicherung</div>
+    <p style="font-size:var(--text-xs);color:var(--col-text-muted);line-height:1.6;">
+      Eure Eingaben werden automatisch auf diesem Gerät gespeichert. Beim Gerätewechsel sind sie dort nicht vorhanden.
+    </p>
+  </div>`;
+}
+
+// =====================================================
+// RESTORE FORMS
+// =====================================================
+
+function restoreForms() {
+  document.querySelectorAll('[data-k]').forEach(el => {
+    const k = el.dataset.k;
+    if (S[k] !== undefined) el.value = S[k];
+  });
+  // Erkenntnisse
+  for (let i=0;i<3;i++) {
+    const el = document.querySelector(`[data-erk="${i}"]`);
+    if (el && S.erk?.[i] !== undefined) el.value = S.erk[i];
+  }
+  // Auto-save on change
+  document.querySelectorAll('textarea, input, select').forEach(el => {
+    el.addEventListener('change', () => save());
+    el.addEventListener('blur',   () => save());
+  });
+}
+
+// =====================================================
+// DYNAMIC CARD / TABLE ACTIONS
+// =====================================================
+
+function addCard() {
+  collectForms();
+  S.acards.push({});
+  const isFilm = PROJECTS[S.projectId].area === 'film';
+  const wrap = document.getElementById('cards-wrap');
+  const idx = wrap.querySelectorAll('.acard').length;
+  wrap.insertAdjacentHTML('beforeend', mkCard(idx, {}, isFilm));
+  wrap.lastElementChild.scrollIntoView({ behavior:'smooth' });
+  // re-bind autosave on new elements
+  wrap.lastElementChild.querySelectorAll('textarea,input,select').forEach(el => {
+    el.addEventListener('change', () => save());
+    el.addEventListener('blur',   () => save());
+  });
+}
+
+function removeCard(idx) {
+  collectForms();
+  S.acards.splice(idx, 1);
+  renderPhase(2);
+}
+
+function addGrow() {
+  collectForms();
+  S.glossar_rows.push(['','','','','']);
+  const tbody = document.getElementById('g-body');
+  tbody.insertAdjacentHTML('beforeend', `<tr class="grow"><td><input type="text" placeholder="Begriff"></td><td><input type="text" placeholder="Bedeutung"></td><td><input type="text" placeholder="Gruppe"></td><td><input type="text" placeholder="Beispielsatz"></td><td><input type="text" placeholder="Wirkung"></td></tr>`);
+}
+
+function addStrow() {
+  collectForms();
+  const n = document.querySelectorAll('.strow').length + 1;
+  S.story_rows.push([String(n),'','','']);
+  const tbody = document.getElementById('s-body');
+  tbody.insertAdjacentHTML('beforeend', `<tr class="strow"><td><input type="text" value="${n}" placeholder="${n}"></td><td><input type="text" placeholder="Was ist zu sehen?"></td><td><input type="text" placeholder="Musik, Geräusch …"></td><td><input type="text" placeholder="Welche Wirkung?"></td></tr>`);
+}
+
+// =====================================================
+// RESULTS
+// =====================================================
+
+function showResults() {
+  collectForms();
+  save();
+  const p = PROJECTS[S.projectId];
+  const isFilm = p.area === 'film';
+
+  const cardsHTML = S.acards.length
+    ? S.acards.map((c,i)=>`<div class="res-row">
+        <div class="res-label">Beispiel ${i+1}</div>
+        <div class="res-val">${c.example||'–'}<br><em style="color:var(--col-text-muted)">Ergebnis: ${c.result||'–'}</em></div>
+      </div>`).join('')
+    : `<div class="res-row"><div class="res-label">Beispiele</div><div class="res-val">–</div></div>`;
+
+  document.getElementById('results-body').innerHTML = `
+    <div class="res-section">
+      <h3>📌 Projekt &amp; Gruppe</h3>
+      <div class="res-row"><div class="res-label">Projekt</div><div class="res-val">${p.icon} ${p.title}</div></div>
+      <div class="res-row"><div class="res-label">Bereich</div><div class="res-val">${isFilm?'🎥 Filmanalyse':'🗣️ Soziolinguistik'}</div></div>
+      <div class="res-row"><div class="res-label">Gruppe</div><div class="res-val">${S.members||'–'}</div></div>
+      <div class="res-row"><div class="res-label">Leitfrage</div><div class="res-val">${S.leitfrage||'–'}</div></div>
+      <div class="res-row"><div class="res-label">Produkt</div><div class="res-val">${S.prod_type||S.product||'–'}</div></div>
+    </div>
+    <div class="res-section">
+      <h3>🔍 Material &amp; Untersuchung</h3>
+      <div class="res-row"><div class="res-label">Untersuchtes Material</div><div class="res-val">${S.mat_focus||'–'}</div></div>
+      <div class="res-row"><div class="res-label">Beispiele</div><div class="res-val">${S.mat_examples||'–'}</div></div>
+      ${cardsHTML}
+    </div>
+    <div class="res-section">
+      <h3>💡 Wichtigste Erkenntnisse</h3>
+      <div class="res-row"><div class="res-label">Erkenntnis 1</div><div class="res-val">${S.erk[0]||'–'}</div></div>
+      <div class="res-row"><div class="res-label">Erkenntnis 2</div><div class="res-val">${S.erk[1]||'–'}</div></div>
+      <div class="res-row"><div class="res-label">Erkenntnis 3</div><div class="res-val">${S.erk[2]||'–'}</div></div>
+    </div>
+    <div class="res-section">
+      <h3>🔗 Quellen</h3>
+      <div class="res-row"><div class="res-label">Quellen</div><div class="res-val">${S.mat_sources||'–'}</div></div>
+    </div>
+    <div class="res-section">
+      <h3>🪞 Reflexion</h3>
+      <div class="res-row"><div class="res-label">Das haben wir gelernt</div><div class="res-val">${S.refl_learn||'–'}</div></div>
+      <div class="res-row"><div class="res-label">Das ist gut gelungen</div><div class="res-val">${S.refl_good||'–'}</div></div>
+      <div class="res-row"><div class="res-label">Das war schwierig</div><div class="res-val">${S.refl_hard||'–'}</div></div>
+      <div class="res-row"><div class="res-label">Beim nächsten Mal</div><div class="res-val">${S.refl_next||'–'}</div></div>
+    </div>`;
+
+  showView('results');
+}
+
+function copyResults() {
+  const p = PROJECTS[S.projectId];
+  const lines = [
+    'PROJEKTÜBERSICHT: Film & Sprache nach der ZP10',
+    '='.repeat(44), '',
+    `PROJEKT:    ${p.title}`,
+    `BEREICH:    ${p.area==='film'?'Filmanalyse':'Soziolinguistik'}`,
+    `GRUPPE:     ${S.members||'–'}`,
+    `LEITFRAGE:  ${S.leitfrage||'–'}`,
+    `PRODUKT:    ${S.prod_type||S.product||'–'}`, '',
+    'UNTERSUCHTES MATERIAL:', S.mat_focus||'–', '',
+    'BEISPIELE:', S.mat_examples||'–', '',
+    'ANALYSEERGEBNISSE:',
+    ...S.acards.map((c,i)=>`  Beispiel ${i+1}: ${c.example||'–'} → ${c.result||'–'}`), '',
+    'WICHTIGSTE ERKENNTNISSE:',
+    `  1. ${S.erk[0]||'–'}`,
+    `  2. ${S.erk[1]||'–'}`,
+    `  3. ${S.erk[2]||'–'}`, '',
+    'QUELLEN:', S.mat_sources||'–', '',
+    'REFLEXION:',
+    `  Gelernt:        ${S.refl_learn||'–'}`,
+    `  Gut gelungen:   ${S.refl_good||'–'}`,
+    `  Schwierig:      ${S.refl_hard||'–'}`,
+    `  Beim nächsten Mal: ${S.refl_next||'–'}`,
+  ];
+  const text = lines.join('\n');
+  const btn = document.getElementById('copy-btn');
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent = '✅ Kopiert!';
+    btn.style.background = 'var(--col-sage-dark)';
+    setTimeout(()=>{ btn.textContent='📋 Als Text kopieren'; btn.style.background=''; }, 2200);
+  }).catch(()=>{
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    alert('Text wurde kopiert!');
+  });
+}
+
+// =====================================================
+// INIT
+// =====================================================
+
+load();
+
+if (S.projectId !== null && S.view === 'cockpit') {
+  applyProjectTheme();
+  updateNav();
+  showView('cockpit');
+  renderPhase(S.phase || 0);
+} else if (S.projectId !== null && S.view === 'results') {
+  applyProjectTheme();
+  showResults();
+}
+
+window.addEventListener('beforeunload', save);
+</script>
+</body>
+</html>
